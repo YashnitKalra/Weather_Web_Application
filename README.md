@@ -7,7 +7,7 @@ It is a weather forecast application made by using only front-end technologies t
 3. Bootstrap 4
 4. JavaScript
 5. jQuery
-6. weatherapi (https://www.weatherapi.com/)
+6. weatherapi (https://www.weatherapi.com/)<br>
 Requests are handled through AJAX.
 
 # Location through IP address:
