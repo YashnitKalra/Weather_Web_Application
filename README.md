@@ -11,9 +11,9 @@ It is a weather forecast application made by using only front-end technologies t
 Requests are handled through AJAX.
 
 # Location through IP address:
-![](/screenshots/1.png)
-![](/screenshots/2.png)
-
-# Location through Manual Search:
 ![](/screenshots/3.png)
 ![](/screenshots/4.png)
+
+# Location through Manual Search:
+![](/screenshots/1.png)
+![](/screenshots/2.png)
