@@ -1,0 +1,138 @@
+<html>
+    <head>
+        <title>Weather</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <style>
+            body{
+                background-color: black;
+                background-image: url("https://wallpaper-house.com/data/out/12/wallpaper2you_484214.jpg");
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: center center;
+            }
+        </style>
+    </head>
+    <body style="height: 100%;">
+        <div class="pr-5 pl-5 pt-4">
+            <div class='input-group' style="opacity: 0.7;">
+                <input id='place' class='form-control' placeholder="Enter Place">
+                <div class='input-group-append'><button class="btn btn-dark" id='submit'>Submit</button></div>
+            </div>
+            <div id="data" style="background: rgba(0, 0, 0, 0.6);" class="text-light p-3 rounded-bottom container-fluid"></div>
+        </div>
+
+        <div class="modal fade" id="hourly" style="opacity: 0.85;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-dark text-light pb-0 pt-2">
+                        <h4 class="modal-title" id='hourly-title'></h4>
+                        <button type="button" class="close text-light" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body pb-0" id="hourly-body"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+<script>
+    let key = "ee511ed38c4a41b7810143054200712";
+    let link = `http://api.weatherapi.com/v1/forecast.json?key=${key}&days=3&`
+    let ipLink = "https://api.ipify.org/?format=json"
+    let degree = String.fromCharCode(176)
+
+    $(document).ready(function(){
+
+        function appendResult(result){
+            rowStart = '<div class="row mb-2"><div class="col-sm-3">'
+            rowMiddle = ':</div><div class="col-sm-9">'
+            rowEnd = '</div></div>'
+            day = result['forecast']['forecastday']
+            modalButton = -1
+
+            function getModalButton(){
+                modalButton++
+                return `<button id="mBtn${modalButton}" type='button' class='float-right btn btn-outline-light'>View Hourly</button>`
+            }
+
+            $("#data").html("")
+            $("#data").append(`<div class="text-center"><h1 class="d-inline">${result['current']['condition']['text']}<img src="http://${result['current']['condition']['icon'].slice(2)}"></h1>${getModalButton()}</div>`)
+            $("#data").append(`<div class="mb-2 text-center"><h2 class="d-inline">Temperature: ${result['current']['temp_c']+degree}C / ${result['current']['temp_f']+degree}F <small>(${result['current']['is_day']===1?"Day":"Night"})</small></h2></div>`)
+            $("#data").append(rowStart + "Feels Like" + rowMiddle + `${result['current']['feelslike_c']}${degree}C / ${result['current']['feelslike_f']}${degree}F` + rowEnd)
+            for(key in result['location']){
+                if(key!="localtime_epoch" && result['location'][key]!="")
+                    $("#data").append(rowStart + key.toUpperCase() + rowMiddle + result['location'][key] + rowEnd)
+            }
+            $("#data").append(rowStart + "Wind Speed" + rowMiddle + result['current']['wind_mph'] + " mph / " + result['current']['wind_kph'] + " kph" + rowEnd)
+            $("#data").append(rowStart + `Pressure${rowMiddle}${result['current']['pressure_mb']} mb` + rowEnd)
+            $("#data").append(rowStart + `Precipitation${rowMiddle}${result['current']['precip_mm']} mm` + rowEnd)
+            $("#data").append(rowStart + `Chance of Precipitation${rowMiddle}${day['0']['day']['daily_chance_of_rain']} %` + rowEnd)
+            $("#data").append(rowStart + `Chance of Snow${rowMiddle}${day['0']['day']['daily_chance_of_snow']} %` + rowEnd)
+            $("#data").append(rowStart + `Humidity${rowMiddle}${result['current']['humidity']}` + rowEnd)
+
+            forecast = "<div class='row mt-5 text-center'>"
+            for(val of ['1','2']){
+                forecast += "<div class='col-sm-6'>"
+                forecast += `<div>${day[val]['date']}</div>`
+                forecast += `<img src="http://${day[val]['day']['condition']['icon'].slice(2)}">`
+                forecast += `<div>${day[val]['day']['condition']['text']}</div>`
+                forecast += `<div>Temperature: ${day[val]['day']['avgtemp_c'] + degree}C / ${day[val]['day']['avgtemp_f'] + degree}F</div>`
+                forecast += `<div>(${day[val]['day']['mintemp_c'] + degree}C - ${day[val]['day']['maxtemp_c'] + degree}C / `
+                forecast += `${day[val]['day']['mintemp_f'] + degree}F - ${day[val]['day']['maxtemp_f'] + degree}F)</div>`
+                forecast += `<div>Chance of Rain: ${day[val]['day']['daily_chance_of_rain']} %</div>`
+                forecast += `<div>Chance of Snow: ${day[val]['day']['daily_chance_of_snow']} %</div>`
+                forecast += `<div>${getModalButton()}</div>`
+                forecast += "</div>"
+            }
+            forecast += "</div>"
+            $("#data").append(forecast)
+            $("button[id$=mBtn1], button[id$=mBtn2]").removeClass("float-right").addClass("btn-sm mt-1")
+
+            $('#mBtn0').click(function(){addModalContent(result['forecast']['forecastday']['0'])})
+            $('#mBtn1').click(function(){addModalContent(result['forecast']['forecastday']['1'])})
+            $('#mBtn2').click(function(){addModalContent(result['forecast']['forecastday']['2'])})
+        }
+
+        $.ajax({
+            url: ipLink,
+            success: function(result){
+                newLink = link + `q=${result['ip']}`
+                $.ajax({
+                    url: newLink,
+                    success: function(result){appendResult(result)}
+                });
+            }
+        });
+
+        $("#submit").click(function(){
+            let place = $("#place").val()
+            $("#place").val("")
+            let requestUrl = link + `q=${place}`
+            $.ajax({
+                url: requestUrl,
+                success: function(result){appendResult(result)},
+                error: function(msg){
+                    alert(msg['responseJSON']['error']['message'])
+                }
+            });
+        });
+
+        function addModalContent(day){
+            $("#hourly-title").text("").text(`Hourly Weather of ${day['date']}`)
+            content = "<table class='table table-striped text-center'>"
+            content += "<thead><tr class='table-dark text-dark'><th>Time</th><th>Temperature</th><th>Weather</th></tr></thead><tbody>"
+            for(let i=0;i<24;i++)
+                content += `<tr><td>${day['hour'][i]['time'].split(" ")[1]}</td><td>${day['hour'][i]['temp_c']}${degree}C / ${day['hour'][i]['temp_f']}${degree}F</td><td>${day['hour'][i]['condition']['text']}<img height=32 width=32 src="http://${day['hour'][i]['condition']['icon'].slice(2)}"></td></tr>`
+            content += "</tbody></table>"
+            $("#hourly-body").html("").append(content)
+            $("#hourly").modal()
+            $("td").addClass("p-0 align-middle")
+        }
+    });
+
+</script>
